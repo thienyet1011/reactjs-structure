@@ -12,7 +12,7 @@ const ForkIsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserWebpackPlugin = require("terser-webpack-plugin");
-const { GenerateSW, InjectManifest} = require("workbox-webpack-plugin");
+const { InjectManifest} = require("workbox-webpack-plugin");
 
 const publicPath = path.resolve("public");
 const handleCopyPluginPatterns = () => {
@@ -92,11 +92,51 @@ module.exports = async (env, argv) => {
             async: false
         }),
         /*
+        Service workers enable advanced optimization techniques and improvements to user experience. 
+        They let your app work offline when a user loses their network connection. 
+        They also let your app load instantaneously even after pushing an update.
+
+        1. swDest specifies the output filename for the generated worker file.
+        2. clientsClaim instructs the service worker to take control of the page immediately 
+            after registration and begin serving cached resources instead of waiting for the next page reload.
+        3. skipWaiting makes updates to the service worker take effect immediately instead of waiting for all active instances to be destroyed.
+        */
+        // npm install -D workbox-webpack-plugin
+
+        /*
+        The GenerateSW plugin will create a service worker file for you and add it to the webpack asset pipeline.
+
+        When to use generateSW;
+        + You want to precache files.
+        + You have simple runtime configuration needs (e.g. the configuration allows you to define routes and strategies).
+        */
+        // new GenerateSW({
+        //     swDest: "service-worker.js",
+        //     clientsClaim: true,
+        //     skipWaiting: true
+        // }),
+
+        /*
+        The InjectManifest plugin will generate a list of URLs to precache and 
+            add that precache manifest to an existing service worker file. 
+        It will otherwise leave the file as-is.
+
+        When to use injectManifest:
+        + You want more control over your service worker.
+        + You want to precache files.
+        + You have more complex needs in terms of routing.
+        + You would like to use your service worker with other API's (e.g. Web Push).
+        */
+        // new InjectManifest({
+        //     swSrc: './src/serviceWorker.js',
+        //     swDest: 'sw.js'
+        // }),
+
+        /*
         Every time we make a change, the server reloads and we lose our state. 
         We can add a Hot Module Replacement plugin that ships with webpack to our configuration to fix this.
         */
         // isDev && new webpack.HotModuleReplacementPlugin(),
-
         new webpack.ProgressPlugin()
     ];
 
@@ -309,44 +349,6 @@ module.exports = async (env, argv) => {
                     // exclude: "",
                     minify: CssMinimizerPlugin.cssnanoMinify, 
                 }),
-                /*
-                Service workers enable advanced optimization techniques and improvements to user experience. 
-                They let your app work offline when a user loses their network connection. 
-                They also let your app load instantaneously even after pushing an update.
-
-                1. swDest specifies the output filename for the generated worker file.
-                2. clientsClaim instructs the service worker to take control of the page immediately 
-                    after registration and begin serving cached resources instead of waiting for the next page reload.
-                3. skipWaiting makes updates to the service worker take effect immediately instead of waiting for all active instances to be destroyed.
-                */
-                // npm install -D workbox-webpack-plugin
-
-                /*
-                The GenerateSW plugin will create a service worker file for you and add it to the webpack asset pipeline.
-
-                When to use generateSW;
-                + You want to precache files.
-                + You have simple runtime configuration needs (e.g. the configuration allows you to define routes and strategies).
-                */
-                // new GenerateSW({
-                //     swDest: "service-worker.js",
-                //     clientsClaim: true,
-                //     skipWaiting: true
-                // }),
-
-                /*
-                The InjectManifest plugin will generate a list of URLs to precache and add that precache manifest to an existing service worker file. 
-                It will otherwise leave the file as-is.
-
-                When to use injectManifest:
-                + You want more control over your service worker.
-                + You want to precache files.
-                + You have more complex needs in terms of routing.
-                + You would like to use your service worker with other API's (e.g. Web Push).
-                */
-                // new InjectManifest({
-                //     swSrc: './src/sw.js',
-                // })
             ],
             /* 
             Code splitting can refer to two different approaches:

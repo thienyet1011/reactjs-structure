@@ -12,7 +12,7 @@ const ForkIsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserWebpackPlugin = require("terser-webpack-plugin");
-const WorkboxPlugin = require("workbox-webpack-plugin");
+const { GenerateSW, InjectManifest} = require("workbox-webpack-plugin");
 
 const publicPath = path.resolve("public");
 const handleCopyPluginPatterns = () => {
@@ -72,21 +72,15 @@ module.exports = async (env, argv) => {
         */
         // npm install -D html-webpack-plugin
         new HtmlWebpackPlugin({
-            template: "public/index.html"
+            // template: "public/index.html",
+            favicon: "./public/favicon.ico",
+            filename: "index.html",
+            manifest: "./public/manifest.json"
         }),
         // Copies individual files or entire directories (public directory), which already exist, to the build directory.
         // npm install copy-webpack-plugin --save-dev
         new CopyPlugin({
             patterns: copyPluginPatterns
-        }),
-
-        /*
-        This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS. 
-        It supports On-Demand-Loading of CSS and SourceMaps.
-        */
-       // npm install --save-dev mini-css-extract-plugin
-        !isDev && new MiniCssExtractPlugin({
-            filename: isDev ? "[name].css" : "static/css/[name].[contenthash:6].css"
         }),
         /*
         To perform type checking in a separate, parallel process using (typescript)
@@ -124,7 +118,15 @@ module.exports = async (env, argv) => {
             // include: /\/includes/,
             // exclude: /\excludes/
             // threshold: 0, // Only assets bigger than this size are processed. In bytes.
-        })
+        }),
+        /*
+        This plugin extracts CSS into separate files. It creates a CSS file per JS file which contains CSS. 
+        It supports On-Demand-Loading of CSS and SourceMaps.
+        */
+       // npm install --save-dev mini-css-extract-plugin
+        new MiniCssExtractPlugin({
+            filename: isDev ? "[name].css" : "static/css/[name].[contenthash:6].css"
+        }),
     ];
 
     if (isAnalyze) {
@@ -155,7 +157,7 @@ module.exports = async (env, argv) => {
             rules: [
                 {
                     // babel-loader responsible for loading JavaScript files:
-                    test: /\(js|jsx|ts|tsx)$/,
+                    test: /\.(js|jsx|ts|tsx)$/,
                     use: {
                         loader: "babel-loader",
                         options: {
@@ -163,7 +165,8 @@ module.exports = async (env, argv) => {
                             cacheCompression: false,
                             envName: !isDev ? 'production' : 'development',
                         }
-                    }
+                    },
+                    exclude: /node_modules/
                 },
                 {
                     /*
@@ -225,7 +228,7 @@ module.exports = async (env, argv) => {
                     than a given threshold, it will embed the entire file in the URL as base64-encoded contents
                     */
                     // npm install -D url-loader
-                    test: /\.(png|jpe?g|gif|svg)$/i,
+                    test: /\.(png|jpe?g|gif|svg|ico)$/i,
                     use: [
                         {
                             loader: "file-loader",
@@ -317,11 +320,33 @@ module.exports = async (env, argv) => {
                 3. skipWaiting makes updates to the service worker take effect immediately instead of waiting for all active instances to be destroyed.
                 */
                 // npm install -D workbox-webpack-plugin
-                new WorkboxPlugin({
-                    swDest: "service-worker.js",
-                    clientsClaim: true,
-                    skipWaiting: true
-                })
+
+                /*
+                The GenerateSW plugin will create a service worker file for you and add it to the webpack asset pipeline.
+
+                When to use generateSW;
+                + You want to precache files.
+                + You have simple runtime configuration needs (e.g. the configuration allows you to define routes and strategies).
+                */
+                // new GenerateSW({
+                //     swDest: "service-worker.js",
+                //     clientsClaim: true,
+                //     skipWaiting: true
+                // }),
+
+                /*
+                The InjectManifest plugin will generate a list of URLs to precache and add that precache manifest to an existing service worker file. 
+                It will otherwise leave the file as-is.
+
+                When to use injectManifest:
+                + You want more control over your service worker.
+                + You want to precache files.
+                + You have more complex needs in terms of routing.
+                + You would like to use your service worker with other API's (e.g. Web Push).
+                */
+                // new InjectManifest({
+                //     swSrc: './src/sw.js',
+                // })
             ],
             /* 
             Code splitting can refer to two different approaches:
@@ -378,21 +403,15 @@ module.exports = async (env, argv) => {
         hot: true: Tells webpack we need to enable HotModuleReplacement plugin
         */
         devServer: {
-            contentBase: "public",
             compress: true,
             port: 3000,
-            watchContentBase: true,
             historyApiFallback: true,
             open: true,
             hot: true,
-            watchOptions: {
-                poll: true
-            },
-            overlay: true
         },
         plugins: isDev ? basePlugins : productionPlugins,
         performance: {
-            hints: true,
+            hints: false,
             maxEntrypointSize: 250 * 1024, // Khi có 1 file build vượt quá giới hạn này (tính bằng byte) thì sẽ bị warning trên terminal.
             maxAssetSize: 250 * 1024
         }

@@ -12,7 +12,7 @@ const ForkIsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserWebpackPlugin = require("terser-webpack-plugin");
-const { InjectManifest} = require("workbox-webpack-plugin");
+// const { InjectManifest} = require("workbox-webpack-plugin");
 
 const publicPath = path.resolve("public");
 const handleCopyPluginPatterns = () => {
@@ -291,6 +291,13 @@ module.exports = async (env, argv) => {
                             }
                         }
                     ]
+                },
+                {
+                    // To work extension .graphql | .gql
+                    // npm i -D graphql-tag
+                    test: /\.(graphql|gql)$/,
+                    exclude: /node_modules/,
+                    loader: 'graphql-tag/loader',
                 },
                 {
                     /*

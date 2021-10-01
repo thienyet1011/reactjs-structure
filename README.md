@@ -53,8 +53,8 @@ II.  Quy tắc đặt tên file:
 ---------------------------
 1. src 
     - component 
-        - global => ```C{filename}.js``` => Tên file bắt đầu với tiền tố "C" (Common). VD: CNavbar.js
-        - local => ```M{filename}.js``` => Tên file bắt đầu với tiền tố "M" (Module). VD: MHeader.js
+        - global => ```C{component_name}.js``` => Tên file bắt đầu với tiền tố "C" (Common). VD: CNavbar.js
+        - local => ```M{component_name}.js``` => Tên file bắt đầu với tiền tố "M" (Module). VD: MHeader.js
     - redux 
         - global
             - action => ```{action_name}.action.js```. VD: auth.action.js, profile.action.js
@@ -64,6 +64,11 @@ II.  Quy tắc đặt tên file:
             - action => ```{module_name}.{ten_action}.action.js```. VD: auth.login.action.js
             - reducer => ```{module_name}.reducer.js```. VD: login.reducer.js, register.reducer.js
                 => Các reducers sẽ được combine trong file index.js
+    - react-query 
+        - global
+            - func => ```{api_name}.fn.js```
+        - local
+            - func => ```{action_name}.fn.js```
 ----
 III.  Các framework liên quan: 
 
